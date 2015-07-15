@@ -2,19 +2,10 @@
 
 namespace HoloText;
 
-use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
-use pocketmine\plugin\PluginManager;
-use pocketmine\plugin\Plugin;
-use pocketmine\Server;
 use pocketmine\level\particle\FloatingTextParticle;
-use pocketmine\level;
-use pocketmine\level\Position;
-use pocketmine\level\Position\getLevel;
-use pocketmine\level\particle\Particle;
 use pocketmine\math\Vector3;
 use pocketmine\utils\TextFormat;
-use pocketmine\utils\Config;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
 
@@ -46,34 +37,35 @@ class HoloText extends PluginBase implements Listener{
 		return $color;
 		}
 */	
-   public function onLoad(){
-   $this->getLogger()->info("Loading HoloText by Fycarman");
-   }
-   public function saveFiles(){
-			if(!file_exists($this->getDataFolder())){
-				mkdir($this->getDataFolder());
-		   }
+	private $particles = [];
+
+   	public function onLoad(){
+   		$this->getLogger()->info("Loading HoloText by Fycarman");
+   	}
+
+	public function onEnable(){
+		$this->getServer()->getPluginManager()->registerEvents($this, $this);
+		@mkdir($this->getDataFolder());
+		$this->saveDefaultConfig();
+		//todo: supportare più di una scritta
+		$line1 = $this->getConfig()->get("line1");
+		$line2 = $this->getConfig()->get("line2");
+		$line3 = $this->getConfig()->get("line3");
+		$x = $this->getConfig()->get("x");
+		$y = $this->getConfig()->get("y");
+		$z = $this->getConfig()->get("z");
+		$this->particles[] = new FloatingTextParticle(new Vector3($x, $y, $z), "", $line1.PHP_EOL.$line2.PHP_EOL.$line3);
+   	} 
+   	
+	public function onDisable(){
+		$this->getConfig()->save();
+		$this->getLogger()->info("HoloText Disabled");
+	}
+	
+	public function onJoin(PlayerJoinEvent $event){
+		foreach($this->particles as $p){
+			$event->getPlayer()->getLevel()->addParticle($p, [$event->getPlayer()]);
 		}
-		public function onEnable(){
-			$this->getServer()->getPluginManager()->registerEvents($this, $this);
-			@mkdir($this->getDataFolder());
-			$this->saveDefaultConfig();
-   } 
-		public function onDisable(){
-			unset($this->players);
-			$this->getConfig()->save();
-			$this->getLogger()->info("HoloText Disabled");
-				}
-		public function onJoin(PlayerJoinEvent $event){
-			$line1 = $this->getConfig()->get("line1");
-			$line2 = $this->getConfig()->get("line2");
-			$line3 = $this->getConfig()->get("line3");
-			$event->getPlayer();
-			$level = $this->getServer()->getLevelByName($this->getConfig()->get("level"));
-			$x = $this->getConfig()->get("x");
-			$y = $this->getConfig()->get("y");
-			$z = $this->getConfig()->get("z");
-			$level->addParticle(new FloatingTextParticle(new Vector3($x, $y, $z), "", $line1.PHP_EOL.$line2.PHP_EOL.$line3), [$event->getPlayer()]);
-		}	
-		}
-		}
+		
+	}	
+}
